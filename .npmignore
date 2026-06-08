@@ -1,0 +1,11 @@
+# Публикуем только dist (см. поле "files" в package.json); исходники и тесты не нужны
+src
+test
+examples
+.github
+*.config.ts
+.eslintrc.cjs
+.prettierrc.json
+.prettierignore
+tsconfig.json
+coverage

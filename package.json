@@ -1,0 +1,64 @@
+{
+  "name": "avito-ads",
+  "version": "1.0.0",
+  "description": "TypeScript SDK для публичного API кабинета Авито Реклама (Avito Ads). Без рантайм-зависимостей, работает в Node.js 18+, Deno, Bun и serverless.",
+  "keywords": [
+    "avito",
+    "avito-ads",
+    "реклама",
+    "api",
+    "client",
+    "sdk",
+    "typescript"
+  ],
+  "license": "MIT",
+  "author": "asbezrukov <asbezrukov@avito.ru> (https://github.com/asbezrukov)",
+  "homepage": "https://github.com/avito-tech/avito-ads-sdk-typescript#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/avito-tech/avito-ads-sdk-typescript.git"
+  },
+  "bugs": {
+    "url": "https://github.com/avito-tech/avito-ads-sdk-typescript/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}
