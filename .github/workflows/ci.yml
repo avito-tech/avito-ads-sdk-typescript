@@ -20,6 +20,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
+      - name: Version check (package.json == openapi.json == API_VERSION)
+        run: npm run check:version
       - name: Typecheck
         run: npm run typecheck
       - name: Lint

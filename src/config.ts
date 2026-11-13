@@ -4,6 +4,7 @@
 
 import { ConfigurationError } from './errors.js';
 import type { TokenStorage } from './token.js';
+import { buildUserAgent } from './version.js';
 
 const API_HOST = 'https://api.avito.ru';
 const PRODUCTION_PREFIX = 'ads';
@@ -56,7 +57,11 @@ export interface AvitoAdsClientOptions {
   fetch?: FetchLike;
   /** Своё хранилище токена. По умолчанию — в памяти процесса. */
   tokenStorage?: TokenStorage;
-  /** Значение заголовка User-Agent. */
+  /**
+   * Своя метка приложения для заголовка User-Agent. Не заменяет метку SDK:
+   * итоговый UA — `<userAgent> avito-ads-sdk-typescript/<версия>`. По умолчанию
+   * отправляется только `avito-ads-sdk-typescript/<версия>`.
+   */
   userAgent?: string;
 }
 
@@ -72,6 +77,7 @@ export interface ResolvedConfig {
   tokenLeewaySeconds: number;
   fetchImpl: FetchLike;
   tokenStorage?: TokenStorage;
+  /** Итоговый User-Agent (с меткой SDK) для запросов к API и к эндпоинту токена. */
   userAgent: string;
 }
 
@@ -110,7 +116,7 @@ export function resolveConfig(options: AvitoAdsClientOptions): ResolvedConfig {
     tokenLeewaySeconds: options.tokenLeewaySeconds ?? 60,
     fetchImpl,
     tokenStorage: options.tokenStorage,
-    userAgent: options.userAgent ?? 'avito-ads-typescript/0.1.0',
+    userAgent: buildUserAgent(options.userAgent),
   };
 }
 

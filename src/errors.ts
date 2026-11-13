@@ -58,6 +58,14 @@ export class AccessDeniedError extends AvitoApiError {}
 /** HTTP 404 — ресурс не найден. */
 export class NotFoundError extends AvitoApiError {}
 
+/**
+ * HTTP 409 — конфликт состояния. Возвращают изменение бюджета и ставки группы
+ * (`groups.changeBudget`, `groups.changePrice`), когда изменение недоступно в
+ * текущем состоянии группы. Наследует {@link AvitoApiError}, поэтому прежние
+ * обработчики по базовому классу продолжают его ловить.
+ */
+export class ConflictError extends AvitoApiError {}
+
 /** HTTP 429 — превышен лимит запросов. */
 export class RateLimitError extends AvitoApiError {}
 
@@ -94,6 +102,8 @@ export function createApiError(
       return new AccessDeniedError(message, options);
     case 404:
       return new NotFoundError(message, options);
+    case 409:
+      return new ConflictError(message, options);
     case 429:
       return new RateLimitError(message, options);
     default:
@@ -112,6 +122,11 @@ export function isRateLimitError(err: unknown): err is RateLimitError {
 /** Сообщает, что ошибка — это «не найдено» (HTTP 404). */
 export function isNotFoundError(err: unknown): err is NotFoundError {
   return err instanceof NotFoundError;
+}
+
+/** Сообщает, что ошибка — это конфликт состояния (HTTP 409). */
+export function isConflictError(err: unknown): err is ConflictError {
+  return err instanceof ConflictError;
 }
 
 /** Сообщает, что ошибка — это ошибка сервера (HTTP 5xx). */

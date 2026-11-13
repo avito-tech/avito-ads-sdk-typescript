@@ -6,6 +6,8 @@
  * обычный объект-словарь.
  */
 
+import type { CampaignStatus, CreativeStatus, GroupStatus, OpenEnum, Paces } from './enums.js';
+
 /** Диапазон дат в формате YYYY-MM-DD. */
 export interface DateRange {
   from: string;
@@ -72,7 +74,8 @@ export class CampaignsFilter extends BaseFilter {
     this.data.campaignTypes = types;
     return this;
   }
-  statuses(statuses: string[]): this {
+  /** Статусы кампании, включая `will_launch_soon`, `partially_active`, `will_stop_soon`, `pausing`, `unpausing`. */
+  statuses(statuses: OpenEnum<CampaignStatus>[]): this {
     this.data.statuses = statuses;
     return this;
   }
@@ -112,11 +115,11 @@ export class GroupsFilter extends BaseFilter {
     this.data.campaignIDs = ids;
     return this;
   }
-  statuses(statuses: string[]): this {
+  statuses(statuses: OpenEnum<GroupStatus>[]): this {
     this.data.statuses = statuses;
     return this;
   }
-  paces(paces: string[]): this {
+  paces(paces: OpenEnum<Paces>[]): this {
     this.data.paces = paces;
     return this;
   }
@@ -160,7 +163,8 @@ export class CreativesFilter extends BaseFilter {
     this.data.campaignTypes = types;
     return this;
   }
-  statuses(statuses: string[]): this {
+  /** Статусы креатива, включая `will_launch_soon`, `pausing`, `unpausing`. */
+  statuses(statuses: OpenEnum<CreativeStatus>[]): this {
     this.data.statuses = statuses;
     return this;
   }

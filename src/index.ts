@@ -15,6 +15,7 @@
  */
 
 export { AvitoAdsClient } from './client.js';
+export { API_VERSION, SDK_VERSION, DEFAULT_USER_AGENT } from './version.js';
 export {
   optionsFromEnv,
   type AvitoAdsClientOptions,
@@ -39,6 +40,15 @@ export {
   CampaignStatus,
   GroupStatus,
   CreativeStatus,
+  CampaignBudgetFrequency,
+  BudgetFrequency,
+  FrequencyPeriod,
+  GroupFormat,
+  AudienceType,
+  Paces,
+  GroupPriceControl,
+  ScheduleType,
+  type OpenEnum,
 } from './enums.js';
 
 // Ошибки и type-guards.
@@ -51,11 +61,13 @@ export {
   AuthenticationError,
   AccessDeniedError,
   NotFoundError,
+  ConflictError,
   RateLimitError,
   ServerError,
   NetworkError,
   isRateLimitError,
   isNotFoundError,
+  isConflictError,
   isServerError,
 } from './errors.js';
 
@@ -89,7 +101,11 @@ export type {
   Contract,
   Campaign,
   Group,
+  FrequencyRule,
+  ActivitySchedule,
   Creative,
+  KktuFieldValue,
+  StatusReasons,
   User,
   ChildAccount,
   CreatedContract,
@@ -98,6 +114,9 @@ export type {
   CreatedChildAccount,
   StatsData,
   EntityStatistic,
+  CampaignStatistic,
+  GroupStatistic,
+  CreativeStatistic,
   CampaignStatisticResult,
   AdvertiserInput,
   SandboxAccountInput,
