@@ -1,0 +1,50 @@
+# Релиз по тегу vX.Y.Z: проверка версии и тестов → npm (trusted publishing через OIDC, с provenance) → GitHub Release.
+# В npm для пакета avito-ads настроен trusted publisher: avito-tech/avito-ads-sdk-typescript, release.yml, environment npm.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - name: npm with trusted publishing support
+        run: npm install -g npm@latest
+      - run: npm ci
+      - name: Tag matches version
+        run: |
+          npm run check:version
+          pkg=$(node -p "require('./package.json').version")
+          [ "${GITHUB_REF_NAME#v}" = "$pkg" ] || { echo "Тег $GITHUB_REF_NAME не совпадает с package.json $pkg"; exit 1; }
+      - run: npm run typecheck
+      - run: npx vitest run
+      - run: npm run build
+      - name: Publish
+        run: npm publish --provenance --access public
+
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: GitHub Release (notes from CHANGELOG)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          awk -v v="[$ver]" '/^## /{ if (p) exit; if (index($0, v)) { p = 1; next } } p' CHANGELOG.md > release-notes.md
+          test -s release-notes.md || { echo "В CHANGELOG.md нет раздела [$ver]"; exit 1; }
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
