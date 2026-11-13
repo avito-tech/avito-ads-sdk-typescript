@@ -1,7 +1,7 @@
 /** Ресурс статистики по кампаниям, группам и креативам. */
 
 import { ValidationError } from '../errors.js';
-import type { CampaignStatisticResult, EntityStatistic } from '../types.js';
+import type { CampaignStatisticResult, CreativeStatistic, GroupStatistic } from '../types.js';
 import { BaseResource } from './base.js';
 
 const MAX_PERIOD_DAYS = 100;
@@ -39,9 +39,9 @@ export class StatisticsResource extends BaseResource {
     dateTo: string,
     groupIds: number[],
     signal?: AbortSignal,
-  ): Promise<EntityStatistic[]> {
+  ): Promise<GroupStatistic[]> {
     assertPeriod(dateFrom, dateTo);
-    const response = await this.http.request<{ groups?: EntityStatistic[] }>(
+    const response = await this.http.request<{ groups?: GroupStatistic[] }>(
       'POST',
       this.accountPath(`campaigns/${campaignId}/groups/stats`),
       { dateFrom, dateTo, groupIDs: groupIds },
@@ -61,9 +61,9 @@ export class StatisticsResource extends BaseResource {
     dateTo: string,
     creativeIds: number[],
     signal?: AbortSignal,
-  ): Promise<EntityStatistic[]> {
+  ): Promise<CreativeStatistic[]> {
     assertPeriod(dateFrom, dateTo);
-    const response = await this.http.request<{ creatives?: EntityStatistic[] }>(
+    const response = await this.http.request<{ creatives?: CreativeStatistic[] }>(
       'POST',
       this.accountPath(`campaigns/${campaignId}/creatives/stats`),
       { dateFrom, dateTo, creativeIDs: creativeIds },

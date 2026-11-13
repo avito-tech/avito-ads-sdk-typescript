@@ -12,6 +12,8 @@ export interface RecordedRequest {
   url: string;
   path: string;
   authorization?: string;
+  userAgent?: string;
+  headers: Record<string, string>;
   body?: string;
 }
 
@@ -73,6 +75,8 @@ export class FakeFetch {
         url,
         path,
         authorization: init?.headers?.['Authorization'],
+        userAgent: init?.headers?.['User-Agent'],
+        headers: { ...(init?.headers ?? {}) },
         body: init?.body,
       });
       const key = `${method} ${path}`;

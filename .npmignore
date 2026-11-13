@@ -2,6 +2,8 @@
 src
 test
 examples
+scripts
+openapi.json
 .github
 *.config.ts
 .eslintrc.cjs

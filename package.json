@@ -1,6 +1,6 @@
 {
   "name": "avito-ads",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "description": "TypeScript SDK для публичного API кабинета Авито Реклама (Avito Ads). Без рантайм-зависимостей, работает в Node.js 18+, Deno, Bun и serverless.",
   "keywords": [
     "avito",
@@ -49,6 +49,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check:version": "node scripts/check-version.mjs",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {

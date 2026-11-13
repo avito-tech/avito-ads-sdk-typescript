@@ -1,3 +1,5 @@
 dist
 node_modules
 coverage
+# Копия публичного swagger без изменений
+openapi.json

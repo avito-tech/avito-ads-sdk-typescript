@@ -12,6 +12,19 @@ TypeScript/JavaScript SDK для API **Авито Реклама** (Avito Ads AP
 
 Покрывает все основные методы API: аккаунт и баланс, дочерние аккаунты и переводы средств, рекламодателей, договоры, кампании, группы объявлений, креативы, статистику и управление пользователями. Построен на нативном `fetch` — **без рантайм-зависимостей**, поэтому встраивается в бэкенд на Node.js и в любой JS/TS-фреймворк, а также работает в Deno, Bun и serverless/edge-средах.
 
+## Версия
+
+**Версия SDK = версия публичного API (swagger).** SDK `1.4.0` соответствует swagger `1.4.0`
+([техническая документация](https://developers.avito.ru/api-catalog/ads/documentation)); копия
+спецификации лежит в [`openapi.json`](openapi.json).
+
+```ts
+import { API_VERSION, SDK_VERSION } from 'avito-ads';
+console.log(API_VERSION, SDK_VERSION); // '1.4.0' '1.4.0'
+```
+
+Изменения — в [CHANGELOG](CHANGELOG.md).
+
 ## Возможности
 
 - **Без зависимостей** — нативный `fetch` (Node.js 18+, Deno, Bun, edge).
@@ -77,7 +90,7 @@ new AvitoAdsClient({
   tokenLeewaySeconds: 60,
   fetch: customFetch, // своя реализация fetch (Node 16, тесты, прокси)
   tokenStorage: myStorage, // своё хранилище токена (например, Redis)
-  userAgent: 'my-app/1.0',
+  userAgent: 'my-app/1.0', // дополняется меткой SDK, см. «User-Agent»
 });
 ```
 
@@ -123,6 +136,72 @@ console.log(stats.campaign?.totalData?.views, stats.campaign?.totalData?.clicks)
 import { UserRole } from 'avito-ads';
 await client.users.add(42, UserRole.Admin);
 await client.users.delete(42);
+```
+
+## Статусы, причины и бюджеты
+
+Списки кампаний, групп и креативов возвращают причины текущего статуса: `statusReasons` — все
+коды (`[]`, если причин нет), `topStatusReason` — главная причина (`""`, если не определена).
+API может добавлять новые коды причин и статусы: поля-перечисления в ответах имеют тип
+`OpenEnum<T>` (известные значения плюс любая строка), неизвестное значение приходит строкой без
+ошибки.
+
+```ts
+import { CampaignStatus } from 'avito-ads';
+
+for await (const campaign of client.campaigns.iterate()) {
+  if (campaign.status === CampaignStatus.PartiallyActive) {
+    console.log(campaign.name, campaign.topStatusReason, campaign.statusReasons);
+  }
+}
+```
+
+Бюджет кампании — `number | null`. У кампании с `budgetFrequency: 'mixed'` (есть группы и с
+дневным бюджетом, и с бюджетом на весь период) `budget` и `budgetKopeks` отсутствуют; у пустой
+кампании они равны `0`. Не путайте отсутствие суммы с нулём:
+
+```ts
+if (campaign.budget == null) {
+  console.log(campaign.name, 'бюджет не агрегируется:', campaign.budgetFrequency); // 'mixed'
+} else {
+  console.log(campaign.name, campaign.budget, '₽', campaign.budgetKopeks, 'коп.'); // 0 — пустая кампания
+}
+```
+
+Частотные ограничения группы — в `frequencyRules`; `frequencyCount`/`frequencyPeriod`
+устарели и соответствуют первому правилу:
+
+```ts
+for await (const group of client.groups.iterate()) {
+  for (const rule of group.frequencyRules ?? []) {
+    console.log(group.id, `${rule.count} показов за ${rule.period}`); // period: no_limit/day/week/month
+  }
+}
+```
+
+Денежные поля продублированы в копейках: `balanceKopeks`, `bonusBalanceKopeks`, `spendKopeks`,
+`spendBonusKopeks`, `budgetKopeks`, `priceKopeks`.
+
+### Песочница: создание тестового аккаунта
+
+Ответ `207 Multi-Status` — успех: аккаунт создан, но тестовые данные подготовлены не полностью.
+Причины — в `warnings` (`[]`, если всё готово).
+
+```ts
+import { LegalType } from 'avito-ads';
+
+const created = await client.account.createSandboxAccount({
+  inn: '7712345678',
+  shortName: 'Тест',
+  longName: 'ООО «Тест»',
+  ogrn: '1177746123456',
+  legalAddress: 'г. Москва',
+  legalType: LegalType.UL, // обязательное поле
+  contact: { name: 'Иван Иванов', phone: '+79990000000' },
+});
+if (created.warnings.length > 0) {
+  console.warn('Аккаунт подготовлен не полностью:', created.warnings);
+}
 ```
 
 ## Договоры
@@ -183,14 +262,16 @@ for await (const campaign of client.campaigns.iterate()) {
 import { CampaignsFilter, CampaignStatus } from 'avito-ads';
 
 const filter = new CampaignsFilter()
-  .statuses([CampaignStatus.Active])
+  .statuses([CampaignStatus.Active, CampaignStatus.PartiallyActive, CampaignStatus.WillStopSoon])
   .contractIds([10, 20])
   .createdAt({ from: '2025-01-01', to: '2025-01-31' });
 
 const page = await client.campaigns.list({ filter });
 ```
 
-Пустой фильтр корректно сериализуется в JSON-объект `{}`, как требует API.
+Пустой фильтр корректно сериализуется в JSON-объект `{}`, как требует API. Фильтры `statuses`
+принимают все статусы swagger 1.4.0, включая `will_launch_soon`, `partially_active`,
+`will_stop_soon`, `pausing`, `unpausing`.
 
 ## Обработка ошибок
 
@@ -210,7 +291,39 @@ try {
 }
 ```
 
-Классы: `BadRequestError`, `AuthenticationError`, `AccessDeniedError`, `NotFoundError`, `RateLimitError`, `ServerError` (все наследуют `AvitoApiError`), а также `NetworkError`, `ConfigurationError`, `ValidationError`. Есть type-guards `isRateLimitError`, `isNotFoundError`, `isServerError`.
+Классы: `BadRequestError`, `AuthenticationError`, `AccessDeniedError`, `NotFoundError`, `ConflictError`, `RateLimitError`, `ServerError` (все наследуют `AvitoApiError`), а также `NetworkError`, `ConfigurationError`, `ValidationError`. Есть type-guards `isRateLimitError`, `isNotFoundError`, `isConflictError`, `isServerError`.
+
+`ConflictError` (HTTP 409) возвращают `groups.changeBudget` и `groups.changePrice`, если
+изменение недоступно в текущем состоянии группы:
+
+```ts
+import { isConflictError } from 'avito-ads';
+
+try {
+  await client.groups.changeBudget(555, 100000);
+} catch (err) {
+  if (isConflictError(err)) {
+    console.log('Бюджет сейчас изменить нельзя:', err.code, err.message);
+  } else {
+    throw err;
+  }
+}
+```
+
+## User-Agent
+
+По умолчанию SDK отправляет `User-Agent: avito-ads-sdk-typescript/<версия>` (например,
+`avito-ads-sdk-typescript/1.4.0`) — и в запросах к API, и в запросе токена. По этой метке API
+понимает, что запрос пришёл из SDK.
+
+Опция `userAgent` не заменяет метку, а дополняет её через пробел:
+
+```ts
+new AvitoAdsClient({ clientId, clientSecret, accountId, userAgent: 'my-app/1.0' });
+// User-Agent: my-app/1.0 avito-ads-sdk-typescript/1.4.0
+```
+
+Если значение уже содержит `avito-ads-sdk-typescript/`, метка второй раз не добавляется.
 
 ## Таймаут и отмена
 
@@ -313,6 +426,7 @@ npm run lint        # ESLint
 npm run format      # Prettier
 npm test            # Vitest (моки fetch, без сети)
 npm run build       # сборка ESM + CJS + .d.ts (tsup)
+npm run check:version  # package.json == openapi.json (info.version) == API_VERSION
 ```
 
 Интеграционные тесты против песочницы по умолчанию пропускаются:

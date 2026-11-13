@@ -32,6 +32,9 @@ export class AccountResource extends BaseResource {
    * Создаёт тестовый аккаунт (только в песочнице).
    *
    * POST v1/account/{accountID}
+   *
+   * Ответ `207 Multi-Status` (аккаунт создан, тестовые данные подготовлены не
+   * полностью) — тоже успех: причины перечислены в `warnings`.
    */
   async createSandboxAccount(
     input: SandboxAccountInput,
@@ -40,12 +43,17 @@ export class AccountResource extends BaseResource {
     if (!input.contact || Object.keys(input.contact).length === 0) {
       throw new ValidationError('Для создания аккаунта необходимо передать contact.');
     }
+    if (!input.legalType) {
+      throw new ValidationError('Для создания аккаунта необходимо передать legalType.');
+    }
     const response = await this.http.request<CreatedAccount>(
       'POST',
       this.accountPath(),
       input,
       signal,
     );
-    return response.data;
+    // До 2026-06-06 поля warnings в ответе не было: приводим к пустому массиву.
+    const warnings = Array.isArray(response.data.warnings) ? response.data.warnings : [];
+    return { ...response.data, warnings };
   }
 }

@@ -20,6 +20,8 @@ export class GroupResource extends BaseResource {
    * Изменить бюджет группы (только ручное управление ставкой; значение >= 1).
    *
    * POST v1/account/{accountID}/group/{groupID}/change-budget
+   *
+   * @throws ConflictError (HTTP 409), если изменение недоступно в текущем состоянии группы.
    */
   async changeBudget(groupId: number, budget: number, signal?: AbortSignal): Promise<void> {
     if (budget < 1) {
@@ -37,6 +39,8 @@ export class GroupResource extends BaseResource {
    * Изменить ставку группы (только ручное управление ставкой; значение >= 1).
    *
    * POST v1/account/{accountID}/group/{groupID}/change-price
+   *
+   * @throws ConflictError (HTTP 409), если изменение недоступно в текущем состоянии группы.
    */
   async changePrice(groupId: number, price: number, signal?: AbortSignal): Promise<void> {
     if (price < 1) {
