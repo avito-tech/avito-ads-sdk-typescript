@@ -14,13 +14,13 @@ TypeScript/JavaScript SDK для API **Авито Реклама** (Avito Ads AP
 
 ## Версия
 
-**Версия SDK = версия публичного API (swagger).** SDK `1.4.0` соответствует swagger `1.4.0`
+**Версия SDK = версия публичного API (swagger).** SDK `1.5.1` соответствует swagger `1.5.1`
 ([техническая документация](https://developers.avito.ru/api-catalog/ads/documentation)); копия
 спецификации лежит в [`openapi.json`](openapi.json).
 
 ```ts
 import { API_VERSION, SDK_VERSION } from 'avito-ads';
-console.log(API_VERSION, SDK_VERSION); // '1.4.0' '1.4.0'
+console.log(API_VERSION, SDK_VERSION); // '1.5.1' '1.5.1'
 ```
 
 Изменения — в [CHANGELOG](CHANGELOG.md).
@@ -128,9 +128,18 @@ const created = await client.advertisers.create({
 await client.groups.changeBudget(555, 100000);
 await client.groups.changePrice(555, 25);
 
-// Статистика (период <= 100 дней, даты YYYY-MM-DD)
+// Статистика (период <= 100 дней, даты YYYY-MM-DD; до 5000 ID групп или креативов)
 const stats = await client.statistics.campaign(555, '2025-01-01', '2025-01-31');
 console.log(stats.campaign?.totalData?.views, stats.campaign?.totalData?.clicks);
+
+// Конверсии кампании и групп (у креативов API их не возвращает)
+const withConversions = await client.statistics.campaign(555, '2025-01-01', '2025-01-31', {
+  includeConversions: true,
+});
+const conversions = withConversions.campaign?.totalData?.conversions; // нет данных — undefined/null
+console.log(conversions?.goalType, conversions?.cpaKopeks); // contacts | subscriptions | customGoal
+console.log(conversions?.contacts?.totalCount); // контакты и подписки — только click-in
+console.log(conversions?.customGoal?.name, conversions?.goalHits); // главная цель — только click-out
 
 // Пользователи
 import { UserRole } from 'avito-ads';
@@ -270,7 +279,7 @@ const page = await client.campaigns.list({ filter });
 ```
 
 Пустой фильтр корректно сериализуется в JSON-объект `{}`, как требует API. Фильтры `statuses`
-принимают все статусы swagger 1.4.0, включая `will_launch_soon`, `partially_active`,
+принимают все статусы swagger 1.5.1, включая `will_launch_soon`, `partially_active`,
 `will_stop_soon`, `pausing`, `unpausing`.
 
 ## Обработка ошибок
@@ -313,14 +322,14 @@ try {
 ## User-Agent
 
 По умолчанию SDK отправляет `User-Agent: avito-ads-sdk-typescript/<версия>` (например,
-`avito-ads-sdk-typescript/1.4.0`) — и в запросах к API, и в запросе токена. По этой метке API
+`avito-ads-sdk-typescript/1.5.1`) — и в запросах к API, и в запросе токена. По этой метке API
 понимает, что запрос пришёл из SDK.
 
 Опция `userAgent` не заменяет метку, а дополняет её через пробел:
 
 ```ts
 new AvitoAdsClient({ clientId, clientSecret, accountId, userAgent: 'my-app/1.0' });
-// User-Agent: my-app/1.0 avito-ads-sdk-typescript/1.4.0
+// User-Agent: my-app/1.0 avito-ads-sdk-typescript/1.5.1
 ```
 
 Если значение уже содержит `avito-ads-sdk-typescript/`, метка второй раз не добавляется.

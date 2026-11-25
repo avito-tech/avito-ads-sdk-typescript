@@ -5,10 +5,23 @@ import type { CampaignStatisticResult, CreativeStatistic, GroupStatistic } from 
 import { BaseResource } from './base.js';
 
 const MAX_PERIOD_DAYS = 100;
+const MAX_IDS = 5000;
+
+/** Необязательные параметры запросов статистики кампании и групп. */
+export interface StatisticsOptions {
+  /**
+   * Запросить конверсии (`StatsData.conversions`). По умолчанию `false`. Для
+   * креативов API конверсии не возвращает.
+   */
+  includeConversions?: boolean;
+  /** Сигнал отмены запроса. */
+  signal?: AbortSignal;
+}
 
 export class StatisticsResource extends BaseResource {
   /**
    * Статистика по кампании со сводками по группам и креативам.
+   * `options.includeConversions` добавляет конверсии кампании и групп.
    *
    * POST v1/account/{accountID}/campaigns/{campaignID}/stats
    */
@@ -16,20 +29,22 @@ export class StatisticsResource extends BaseResource {
     campaignId: number,
     dateFrom: string,
     dateTo: string,
-    signal?: AbortSignal,
+    options?: StatisticsOptions | AbortSignal,
   ): Promise<CampaignStatisticResult> {
     assertPeriod(dateFrom, dateTo);
+    const { includeConversions, signal } = normalizeOptions(options);
     const response = await this.http.request<CampaignStatisticResult>(
       'POST',
       this.accountPath(`campaigns/${campaignId}/stats`),
-      { dateFrom, dateTo },
+      { dateFrom, dateTo, ...(includeConversions ? { includeConversions } : {}) },
       signal,
     );
     return response.data;
   }
 
   /**
-   * Статистика по группам кампании.
+   * Статистика по группам кампании (от 1 до 5000 ID).
+   * `options.includeConversions` добавляет конверсии групп.
    *
    * POST v1/account/{accountID}/campaigns/{campaignID}/groups/stats
    */
@@ -38,20 +53,27 @@ export class StatisticsResource extends BaseResource {
     dateFrom: string,
     dateTo: string,
     groupIds: number[],
-    signal?: AbortSignal,
+    options?: StatisticsOptions | AbortSignal,
   ): Promise<GroupStatistic[]> {
     assertPeriod(dateFrom, dateTo);
+    assertIds('groupIds', groupIds);
+    const { includeConversions, signal } = normalizeOptions(options);
     const response = await this.http.request<{ groups?: GroupStatistic[] }>(
       'POST',
       this.accountPath(`campaigns/${campaignId}/groups/stats`),
-      { dateFrom, dateTo, groupIDs: groupIds },
+      {
+        dateFrom,
+        dateTo,
+        groupIDs: groupIds,
+        ...(includeConversions ? { includeConversions } : {}),
+      },
       signal,
     );
     return response.data.groups ?? [];
   }
 
   /**
-   * Статистика по креативам кампании.
+   * Статистика по креативам кампании (от 1 до 5000 ID).
    *
    * POST v1/account/{accountID}/campaigns/{campaignID}/creatives/stats
    */
@@ -63,6 +85,7 @@ export class StatisticsResource extends BaseResource {
     signal?: AbortSignal,
   ): Promise<CreativeStatistic[]> {
     assertPeriod(dateFrom, dateTo);
+    assertIds('creativeIds', creativeIds);
     const response = await this.http.request<{ creatives?: CreativeStatistic[] }>(
       'POST',
       this.accountPath(`campaigns/${campaignId}/creatives/stats`),
@@ -70,6 +93,20 @@ export class StatisticsResource extends BaseResource {
       signal,
     );
     return response.data.creatives ?? [];
+  }
+}
+
+/** До 1.5.1 последним параметром был `AbortSignal` — он по-прежнему принимается. */
+function normalizeOptions(options: StatisticsOptions | AbortSignal = {}): StatisticsOptions {
+  return 'aborted' in options ? { signal: options } : options;
+}
+
+/** Проверяет число ID в запросе (от 1 до 5000, повторяющиеся учитываются). */
+function assertIds(field: string, ids: number[]): void {
+  if (ids.length < 1 || ids.length > MAX_IDS) {
+    throw new ValidationError(
+      `${field} должен содержать от 1 до ${MAX_IDS} ID, передано ${ids.length}.`,
+    );
   }
 }
 

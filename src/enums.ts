@@ -166,6 +166,14 @@ export const BudgetFrequency = {
 } as const;
 export type BudgetFrequency = (typeof BudgetFrequency)[keyof typeof BudgetFrequency];
 
+/** Тип целевого действия, по которому рассчитаны CPA и CR (`Conversions.goalType`). */
+export const ConversionGoalType = {
+  Contacts: 'contacts',
+  Subscriptions: 'subscriptions',
+  CustomGoal: 'customGoal',
+} as const;
+export type ConversionGoalType = (typeof ConversionGoalType)[keyof typeof ConversionGoalType];
+
 /** Период частотного ограничения (`FrequencyRule.period`). */
 export const FrequencyPeriod = {
   NoLimit: 'no_limit',

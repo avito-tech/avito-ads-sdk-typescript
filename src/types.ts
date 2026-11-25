@@ -1,5 +1,5 @@
 /**
- * Типы моделей ответов API (swagger 1.4.0).
+ * Типы моделей ответов API (swagger 1.5.1).
  *
  * Имена полей соответствуют JSON-ответам API (включая особенности регистра,
  * например `accountID` против `accountId`).
@@ -17,6 +17,7 @@ import type {
   CampaignStatus,
   CampaignType,
   ContractType,
+  ConversionGoalType,
   CreativeStatus,
   FrequencyPeriod,
   GroupFormat,
@@ -300,6 +301,44 @@ export interface CreatedChildAccount {
   clientSecret?: string;
 }
 
+/** Количество конверсий одного типа (контактов или подписок) с разбивкой по платформам. */
+export interface ConversionData {
+  totalCount: number;
+  webCount: number;
+  mavCount: number;
+  androidCount: number;
+  iosCount: number;
+  /** Отношение событий к кликам (0.05 = 5%). */
+  cr: number;
+}
+
+/** Главная цель click-out кампании. */
+export interface CustomGoal {
+  id: number;
+  name: string;
+}
+
+/**
+ * Конверсии кампании или группы. Отсутствие поля или `null` — API не вернул
+ * значение; `0` — значение известно и равно нулю.
+ */
+export interface Conversions {
+  /** Контакты; только для click-in кампаний. */
+  contacts?: ConversionData | null;
+  /** Подписки; только для click-in кампаний. */
+  subscriptions?: ConversionData | null;
+  /** Количество событий главной цели click-out кампании. */
+  goalHits?: number | null;
+  /** Стоимость целевого действия в копейках. */
+  cpaKopeks?: number | null;
+  /** Целевое действие, по которому рассчитаны CPA и CR. */
+  goalType?: OpenEnum<ConversionGoalType>;
+  /** Главная цель click-out кампании. */
+  customGoal?: CustomGoal | null;
+  /** Отношение целевых событий к кликам (0.05 = 5%). */
+  cr?: number | null;
+}
+
 /** Точка статистики (за день или агрегированная). */
 export interface StatsData {
   timestamp?: string;
@@ -324,6 +363,12 @@ export interface StatsData {
   q50?: number;
   q75?: number;
   vtr?: number;
+  /**
+   * Конверсии за день или за период. Отсутствует или `null`, если конверсии не
+   * запрошены (`includeConversions`) или данных нет. В статистике креативов не
+   * возвращается.
+   */
+  conversions?: Conversions | null;
 }
 
 /** Общие поля статистики по сущности (кампании, группе или креативу). */
