@@ -42,6 +42,7 @@ export {
   CreativeStatus,
   CampaignBudgetFrequency,
   BudgetFrequency,
+  ConversionGoalType,
   FrequencyPeriod,
   GroupFormat,
   AudienceType,
@@ -93,6 +94,9 @@ export {
 // Хранилище токена.
 export { MemoryTokenStorage, type TokenStorage, type StoredToken } from './token.js';
 
+// Параметры запросов.
+export type { StatisticsOptions } from './resources/statistics.js';
+
 // Типы моделей.
 export type {
   Account,
@@ -113,6 +117,9 @@ export type {
   CreatedAccount,
   CreatedChildAccount,
   StatsData,
+  Conversions,
+  ConversionData,
+  CustomGoal,
   EntityStatistic,
   CampaignStatistic,
   GroupStatistic,

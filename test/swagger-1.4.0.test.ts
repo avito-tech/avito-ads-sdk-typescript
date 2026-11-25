@@ -40,7 +40,7 @@ const readJson = (path: string): { version?: string; info?: { version?: string }
 
 describe('Версия', () => {
   it('SDK_VERSION == API_VERSION == package.json == openapi.json', () => {
-    expect(API_VERSION).toBe('1.4.0');
+    expect(API_VERSION).toBe('1.5.1');
     expect(SDK_VERSION).toBe(API_VERSION);
     expect(readJson('package.json').version).toBe(SDK_VERSION);
     expect(readJson('openapi.json').info?.version).toBe(API_VERSION);

@@ -7,10 +7,10 @@
  */
 
 /** Версия публичного API Авито Рекламы (swagger), которой соответствует SDK. */
-export const API_VERSION = '1.4.0';
+export const API_VERSION = '1.5.1';
 
 /** Версия SDK. Совпадает с версией публичного API (swagger). */
-export const SDK_VERSION = '1.4.0';
+export const SDK_VERSION = '1.5.1';
 
 /** Метка SDK в User-Agent (без версии). По ней сервер определяет, что запрос пришёл из SDK. */
 export const SDK_USER_AGENT_PRODUCT = 'avito-ads-sdk-typescript';
@@ -22,7 +22,7 @@ export const DEFAULT_USER_AGENT = `${SDK_USER_AGENT_PRODUCT}/${SDK_VERSION}`;
  * Собирает значение заголовка User-Agent.
  *
  * Пользовательский UA не заменяет метку SDK: метка дописывается через пробел
- * (`my-app/1.0 avito-ads-sdk-typescript/1.4.0`). Если пользовательский UA уже
+ * (`my-app/1.0 avito-ads-sdk-typescript/1.5.1`). Если пользовательский UA уже
  * содержит `avito-ads-sdk-typescript/` (без учёта регистра), метка второй раз не
  * дописывается.
  */
